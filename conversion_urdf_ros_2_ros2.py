@@ -67,6 +67,11 @@ class ConversionApp:
         package_name = self.target_dir.split("/")[-2]
         output_folder_name = self.source_dir.split("/")[-2]
 
+        print("Source Directory: " + self.source_dir)
+        print("Target Directory: " + self.target_dir)
+        print("Package Name: " + package_name)
+        print("Output Folder Name: " + output_folder_name)
+
         # Create folders
         run_command_dir(self.target_dir, "mkdir launch meshes meshes/collision meshes/visual urdf")
 
