@@ -69,11 +69,18 @@ def generate_launch_description():
         ],
         output="screen",
     )
+
+
+    tf_map= Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments= ["0", "0", "0", "0", "0", "0", "map", "odom"])
+
     # Launch!
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time',default_value='true',description='Use sim time if true'),
         DeclareLaunchArgument('urdf_file',default_value=os.path.join(bringup_dir, 'urdf', 'planar_3dof.urdf'),description='Whether to start RVIZ'),
         DeclareLaunchArgument('use_robot_state_pub',default_value='True',description='Whether to start the robot state publisher'),
         gz_resource_path,
-        gz_sim, spawn_entity,start_robot_state_publisher_cmd
+        gz_sim, spawn_entity,start_robot_state_publisher_cmd,tf_map
     ])

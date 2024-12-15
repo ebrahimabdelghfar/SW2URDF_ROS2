@@ -73,7 +73,11 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file],
         output='screen')
         
-  
+    tf_map= Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments= ["0", "0", "0", "0", "0", "0", "map", "odom"])
+    
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -89,6 +93,7 @@ def generate_launch_description():
     ld.add_action(start_joint_state_publisher_cmd)
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(rviz_cmd)
+    ld.add_action(tf_map)
 
     return ld   
     
