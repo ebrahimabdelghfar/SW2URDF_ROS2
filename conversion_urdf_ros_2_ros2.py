@@ -83,14 +83,18 @@ class ConversionApp:
         run_command_dir(self.source_dir, "cp  ./urdf/" + output_folder_name + ".urdf " + self.target_dir + "urdf/")
 
         # replace files
+        os.system("cp -r ./replace_files/world " + self.target_dir)
         os.system("cp -f ./replace_files/setup.py " + self.target_dir)
         os.system("cp -f ./replace_files/package.xml " + self.target_dir)
         os.system("cp -f ./replace_files/launch.py " + self.target_dir + "launch")
+        os.system("cp -f ./replace_files/gz_simulator_launch.py " + self.target_dir + "launch")
 
         # Change file content
         # launch.py
         replace_str(self.target_dir + "launch/launch.py", "lesson_urdf", package_name)
+        replace_str(self.target_dir + "launch/gz_simulator_launch.py", "lesson_urdf", package_name)
         replace_str(self.target_dir + "launch/launch.py", "planar_3dof.urdf", output_folder_name + ".urdf")
+        replace_str(self.target_dir + "launch/gz_simulator_launch.py", "planar_3dof.urdf", output_folder_name + ".urdf")
         # setup.py
         replace_str(self.target_dir + "setup.py", "lesson_urdf", package_name)
         # package.xml

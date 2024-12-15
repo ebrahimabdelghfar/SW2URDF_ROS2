@@ -13,6 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, glob('launch/*.py')),
   	('share/' + package_name+'/urdf/', glob('urdf/*')),
+    ('share/' + package_name+'/world/', glob('world/*')),
   	('share/' + package_name+'/rviz/', glob('rviz/*')),
   	('share/' + package_name+'/meshes/collision/', glob('meshes/collision/*')),
   	('share/' + package_name+'/meshes/visual/', glob('meshes/visual/*')),

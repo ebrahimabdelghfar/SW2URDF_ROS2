@@ -26,14 +26,17 @@ def generate_launch_description():
         'rviz_config_file',
         default_value=os.path.join(bringup_dir, 'rviz', 'view.rviz'),
         description='Full path to the RVIZ config file to use')  
+    
     declare_use_robot_state_pub_cmd = DeclareLaunchArgument(
         'use_robot_state_pub',
         default_value='True',
         description='Whether to start the robot state publisher')
+    
     declare_use_joint_state_pub_cmd = DeclareLaunchArgument(
         'use_joint_state_pub',
         default_value='True',
         description='Whether to start the joint state publisher')
+    
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
         default_value='True',
