@@ -37,7 +37,7 @@ def modify_urdf(urdf_path, package_name):
         if joint.get("type") == "fixed":
             joint.set("type", "continuous")
             # Change z-axis in origin from 0 to 1
-            origin = joint.find("origin")
+            origin = joint.find("axis")
             if origin is not None:
                 z = origin.get("xyz").split()[2]
                 if z == '0':
@@ -125,6 +125,7 @@ class ConversionApp:
 
         # replace files
         os.system(f"cp -r ./replace_files/world {self.target_dir}")
+        os.system(f"cp -r ./replace_files/config {self.target_dir}")
         os.system(f"cp -f ./replace_files/setup.py {self.target_dir}")
         os.system(f"cp -f ./replace_files/package.xml {self.target_dir}")
         os.system(f"cp -f ./replace_files/launch.py {self.target_dir}launch")

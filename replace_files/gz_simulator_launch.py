@@ -25,13 +25,14 @@ def generate_launch_description():
         robot_desc = infp.read()
 
     start_robot_state_publisher_cmd = Node(
-        condition=IfCondition(use_robot_state_pub),
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
-        output='screen',
-        parameters=[{'use_sim_time': True}],
-        arguments=[robot_desc])
+        output='both',
+        parameters=[
+            {'use_sim_time': True},
+            {'robot_description': robot_desc}
+        ])
 
     gz_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
@@ -78,7 +79,7 @@ def generate_launch_description():
         executable="create",
         arguments=[
             "-name",
-            "robot1",
+            "robot",
             "-topic",
             "/robot_description",
             "-x",
@@ -86,7 +87,7 @@ def generate_launch_description():
             "-y",
             "0",
             "-z",
-            "10.4",
+            "2.0",
         ],
         output="screen",
     )
@@ -99,9 +100,9 @@ def generate_launch_description():
 
     # Launch!
     return LaunchDescription([
-        DeclareLaunchArgument('use_sim_time',default_value='true',description='Use sim time if true'),
-        DeclareLaunchArgument('urdf_file',default_value=os.path.join(bringup_dir, 'urdf', 'planar_3dof.urdf'),description='Whether to start RVIZ'),
+        DeclareLaunchArgument('use_sim_time',default_value='True',description='Use sim time if true'),
+        DeclareLaunchArgument('urdf_file',default_value=os.path.join(bringup_dir, 'urdf', 'assembly_robot.urdf'),description='Whether to start RVIZ'),
         DeclareLaunchArgument('use_robot_state_pub',default_value='True',description='Whether to start the robot state publisher'),
         gz_resource_path,
-        gz_sim, spawn_entity,start_robot_state_publisher_cmd,tf_map
+        gz_sim,bridge, spawn_entity,start_robot_state_publisher_cmd,tf_map,joint_state_publisher
     ])
