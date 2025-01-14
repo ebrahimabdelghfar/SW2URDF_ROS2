@@ -20,15 +20,18 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     bringup_dir = get_package_share_directory('lesson_urdf')
     world = os.path.join(bringup_dir , "world", "depot.sdf")
-    
+    sdf_file  =  os.path.join(bringup_dir, 'urdf', 'robot.sdf')
+    with open(sdf_file, 'r') as infp:
+        robot_desc = infp.read()
+
     start_robot_state_publisher_cmd = Node(
         condition=IfCondition(use_robot_state_pub),
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
-        arguments=[urdf_file])
+        parameters=[{'use_sim_time': True}],
+        arguments=[robot_desc])
 
     gz_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
@@ -36,6 +39,24 @@ def generate_launch_description():
             os.path.join(bringup_dir, 'world'),
             str(Path(bringup_dir).parent.resolve())
         ])
+    )
+
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
+
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        parameters=[{
+            'config_file': os.path.join(bringup_dir, 'config', 'gz_bridge.yaml'),
+            'qos_overrides./tf_static.publisher.durability': 'transient_local',
+        }],
+        output='screen'
     )
 
     gz_sim = IncludeLaunchDescription(
