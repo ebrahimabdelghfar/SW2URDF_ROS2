@@ -44,6 +44,17 @@ def modify_urdf(urdf_path, package_name):
                     origin.set("xyz", origin.get("xyz")[:origin.get("xyz").rfind('0')] + '1')
     tree.write(urdf_path)
 
+def replace_model_with_package(sdf_path):
+    try:
+        with open(sdf_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        content = content.replace('model://', 'package://')
+        with open(sdf_path, 'w', encoding='utf-8') as file:
+            file.write(content)
+        print(f"Successfully replaced 'model://' with 'package://' in {sdf_path}")
+    except Exception as e:
+        print(f"Error replacing 'model://' with 'package://' in {sdf_path}: {e}")
+
 # Function to modify SDF based on original URDF
 def modify_sdf(sdf_path, original_urdf_path):
     tree_urdf = ET.parse(original_urdf_path)
@@ -58,14 +69,9 @@ def modify_sdf(sdf_path, original_urdf_path):
         if joint.get("name") in fixed_joints and joint.get("type") == "revolute":
             joint.set("type", "fixed")
     
-    # Replace "model:" with "package:" in the SDF
-    for elem in root_sdf.iter():
-        if 'uri' in elem.attrib:
-            uri = elem.get('uri')
-            if 'model:' in uri:
-                elem.set('uri', uri.replace('model:', 'package:'))
-    
     tree_sdf.write(sdf_path)
+    # Replace "model://" with "package://" in the SDF file
+    replace_model_with_package(sdf_path)
 
 # GUI application
 class ConversionApp:
