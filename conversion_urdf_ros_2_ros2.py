@@ -81,6 +81,12 @@ class ConversionApp:
 
         self.source_dir = ""
         self.target_dir = ""
+        self.package_path = ""
+        self.package_name = ""
+        self.workspace_dir = ""
+
+        # Checkbox variable
+        self.is_package_created = tk.IntVar()
 
         # Create and place labels and buttons
         self.source_label = tk.Label(root, text="Source Directory (SolidWorks URDF Output):")
@@ -89,79 +95,151 @@ class ConversionApp:
         self.source_button = tk.Button(root, text="Select Source Folder", command=self.select_source)
         self.source_button.pack(pady=5)
 
-        self.target_label = tk.Label(root, text="Target Directory (ROS2 Package Path):")
-        self.target_label.pack(pady=5)
+        # Checkbox
+        self.checkbox = tk.Checkbutton(root, text="Package already created", variable=self.is_package_created, command=self.update_widgets)
+        self.checkbox.pack(pady=5)
 
-        self.target_button = tk.Button(root, text="Select Target Folder", command=self.select_target)
-        self.target_button.pack(pady=5)
+        # Package path selection (if package is already created)
+        self.package_path_label = tk.Label(root, text="Package Path:")
+        self.package_path_label.pack(pady=5)
+        self.package_path_button = tk.Button(root, text="Select Package Folder", command=self.select_package_path, state=tk.DISABLED)
+        self.package_path_button.pack(pady=5)
 
-        self.convert_button = tk.Button(root, text="Start Conversion", command=self.start_conversion)
+        # Package creation fields (if package is not created)
+        self.package_name_label = tk.Label(root, text="Package Name:")
+        self.package_name_label.pack(pady=5)
+        self.package_name_entry = tk.Entry(root)
+        self.package_name_entry.pack(pady=5)
+        self.package_name_entry.config(state=tk.DISABLED)
+
+        self.workspace_label = tk.Label(root, text="Workspace Directory:")
+        self.workspace_label.pack(pady=5)
+        self.workspace_button = tk.Button(root, text="Select Workspace Folder", command=self.select_workspace, state=tk.DISABLED)
+        self.workspace_button.pack(pady=5)
+
+        self.create_package_button = tk.Button(root, text="Create Package", command=self.create_package, state=tk.DISABLED)
+        self.create_package_button.pack(pady=5)
+
+        self.convert_button = tk.Button(root, text="Start Conversion", command=self.start_conversion, state=tk.DISABLED)
         self.convert_button.pack(pady=20)
+
+        # Initialize widget states
+        self.update_widgets()
+
+    def update_widgets(self):
+        if self.is_package_created.get():
+            # Package already created
+            self.package_path_label.config(state=tk.NORMAL)
+            self.package_path_button.config(state=tk.NORMAL)
+            self.package_name_label.config(state=tk.DISABLED)
+            self.package_name_entry.config(state=tk.DISABLED)
+            self.workspace_label.config(state=tk.DISABLED)
+            self.workspace_button.config(state=tk.DISABLED)
+            self.create_package_button.config(state=tk.DISABLED)
+        else:
+            # Package not created, need to create it
+            self.package_path_label.config(state=tk.DISABLED)
+            self.package_path_button.config(state=tk.DISABLED)
+            self.package_name_label.config(state=tk.NORMAL)
+            self.package_name_entry.config(state=tk.NORMAL)
+            self.workspace_label.config(state=tk.NORMAL)
+            self.workspace_button.config(state=tk.NORMAL)
+            self.create_package_button.config(state=tk.NORMAL)
 
     def select_source(self):
         self.source_dir = get_directory("Select the folder generated from SolidWorks (URDF Output)")
         self.source_label.config(text=f"Source Directory: {self.source_dir}")
+        self.check_inputs()
 
-    def select_target(self):
-        self.target_dir = get_directory("Select the ROS2 package folder")
-        self.target_label.config(text=f"Target Directory: {self.target_dir}")
+    def select_package_path(self):
+        self.package_path = get_directory("Select the ROS2 package folder")
+        self.package_path_label.config(text=f"Package Path: {self.package_path}")
+        self.check_inputs()
+
+    def select_workspace(self):
+        self.workspace_dir = get_directory("Select the ROS2 workspace folder")
+        self.workspace_label.config(text=f"Workspace Directory: {self.workspace_dir}")
+        self.check_inputs()
+
+    def create_package(self):
+        self.package_name = self.package_name_entry.get().strip()
+        if not self.package_name:
+            messagebox.showerror("Error", "Please enter a package name.")
+            return
+        if not self.workspace_dir:
+            messagebox.showerror("Error", "Please select a workspace directory.")
+            return
+        # Create the package
+        package_creation_command = f"ros2 pkg create {self.package_name} --build-type ament_python"
+        os.system(f"cd {self.workspace_dir} && {package_creation_command}")
+        # Set the package path
+        self.package_path = f"{self.workspace_dir}/{self.package_name}/"
+        self.package_path_label.config(text=f"Package Path: {self.package_path}")
+        messagebox.showinfo("Success", "Package created successfully!")
+        self.check_inputs()
+
+    def check_inputs(self):
+        if self.source_dir and self.package_path:
+            self.convert_button.config(state=tk.NORMAL)
+        else:
+            self.convert_button.config(state=tk.DISABLED)
 
     def start_conversion(self):
-        if not self.source_dir or not self.target_dir:
-            messagebox.showerror("Error", "Please select both source and target directories.")
+        if not self.source_dir or not self.package_path:
+            messagebox.showerror("Error", "Please select both source and package directories.")
             return
 
-        package_name = self.target_dir.split("/")[-2]
+        package_name = self.package_path.split("/")[-2]
         output_folder_name = self.source_dir.split("/")[-2]
 
         print("Source Directory: " + self.source_dir)
-        print("Target Directory: " + self.target_dir)
+        print("Package Path: " + self.package_path)
         print("Package Name: " + package_name)
         print("Output Folder Name: " + output_folder_name)
 
         # Create folders
-        run_command_dir(self.target_dir, "mkdir launch meshes meshes/collision meshes/visual urdf")
+        run_command_dir(self.package_path, "mkdir launch meshes meshes/collision meshes/visual urdf")
 
         # Copy files
         # Copy stl files
-        run_command_dir(self.source_dir, f"cp -r ./meshes/* {self.target_dir}meshes/visual")
-        run_command_dir(self.source_dir, f"cp -r ./meshes/* {self.target_dir}meshes/collision")
+        run_command_dir(self.source_dir, f"cp -r -f ./meshes/* {self.package_path}meshes/visual")
+        run_command_dir(self.source_dir, f"cp -r -f ./meshes/* {self.package_path}meshes/collision")
         # Copy urdf files
-        run_command_dir(self.source_dir, f"cp  ./urdf/{output_folder_name}.urdf {self.target_dir}urdf/")
+        run_command_dir(self.source_dir, f"cp  -r -f ./urdf/{output_folder_name}.urdf {self.package_path}urdf/")
 
-        # replace files
-        os.system(f"cp -r ./replace_files/world {self.target_dir}")
-        os.system(f"cp -r ./replace_files/config {self.target_dir}")
-        os.system(f"cp -f ./replace_files/setup.py {self.target_dir}")
-        os.system(f"cp -f ./replace_files/package.xml {self.target_dir}")
-        os.system(f"cp -f ./replace_files/launch.py {self.target_dir}launch")
-        os.system(f"cp -f ./replace_files/gz_simulator_launch.py {self.target_dir}launch")
+        # Replace files
+        os.system(f"cp -r -f ./replace_files/world {self.package_path}")
+        os.system(f"cp -r -f ./replace_files/config {self.package_path}")
+        os.system(f"cp -f ./replace_files/setup.py {self.package_path}")
+        os.system(f"cp -f ./replace_files/package.xml {self.package_path}")
+        os.system(f"cp -f ./replace_files/launch.py {self.package_path}launch")
+        os.system(f"cp -f ./replace_files/gz_simulator_launch.py {self.package_path}launch")
 
         # Change file content
         # launch.py
-        replace_str(f"{self.target_dir}launch/launch.py", "lesson_urdf", package_name)
-        replace_str(f"{self.target_dir}launch/gz_simulator_launch.py", "lesson_urdf", package_name)
-        replace_str(f"{self.target_dir}launch/launch.py", "planar_3dof.urdf", f"{output_folder_name}.urdf")
-        replace_str(f"{self.target_dir}launch/gz_simulator_launch.py", "planar_3dof.urdf", f"{output_folder_name}.urdf")
+        replace_str(f"{self.package_path}launch/launch.py", "lesson_urdf", package_name)
+        replace_str(f"{self.package_path}launch/gz_simulator_launch.py", "lesson_urdf", package_name)
+        replace_str(f"{self.package_path}launch/launch.py", "planar_3dof.urdf", f"{output_folder_name}.urdf")
+        replace_str(f"{self.package_path}launch/gz_simulator_launch.py", "planar_3dof.urdf", f"{output_folder_name}.urdf")
         # setup.py
-        replace_str(f"{self.target_dir}setup.py", "lesson_urdf", package_name)
+        replace_str(f"{self.package_path}setup.py", "lesson_urdf", package_name)
         # package.xml
-        replace_str(f"{self.target_dir}package.xml", "lesson_urdf", package_name)
+        replace_str(f"{self.package_path}package.xml", "lesson_urdf", package_name)
         # urdf files
-        replace_str(f"{self.target_dir}urdf/{output_folder_name}.urdf", f"{output_folder_name}/meshes", f"{package_name}/meshes/visual")
+        replace_str(f"{self.package_path}urdf/{output_folder_name}.urdf", f"{output_folder_name}/meshes", f"{package_name}/meshes/visual")
 
         # Copy the generated URDF
-        copied_urdf_path = f"{self.target_dir}urdf/{output_folder_name}_modified.urdf"
-        shutil.copy(f"{self.target_dir}urdf/{output_folder_name}.urdf", copied_urdf_path)
+        copied_urdf_path = f"{self.package_path}urdf/{output_folder_name}_modified.urdf"
+        shutil.copy(f"{self.package_path}urdf/{output_folder_name}.urdf", copied_urdf_path)
 
         # Modify the copied URDF
         modify_urdf(copied_urdf_path, package_name)
 
         # Generate SDF from modified URDF
-        os.system(f"cd {self.target_dir}urdf/ && gz sdf -p {output_folder_name}_modified.urdf > robot.sdf")
+        os.system(f"cd {self.package_path}urdf/ && gz sdf -p {output_folder_name}_modified.urdf > robot.sdf")
 
         # Modify the generated SDF
-        modify_sdf(f"{self.target_dir}urdf/robot.sdf", f"{self.target_dir}urdf/{output_folder_name}.urdf")
+        modify_sdf(f"{self.package_path}urdf/robot.sdf", f"{self.package_path}urdf/{output_folder_name}.urdf")
 
         # Delete the copied URDF
         os.remove(copied_urdf_path)
