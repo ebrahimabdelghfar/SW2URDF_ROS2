@@ -236,7 +236,7 @@ class ConversionApp:
         modify_urdf(copied_urdf_path, package_name)
 
         # Generate SDF from modified URDF
-        os.system(f"cd {self.package_path}urdf/ && gz sdf -p {output_folder_name}_modified.urdf > robot.sdf")
+        os.system(f"cd {self.package_path}urdf/ && ign sdf -p {output_folder_name}_modified.urdf > robot.sdf")
 
         # Modify the generated SDF
         modify_sdf(f"{self.package_path}urdf/robot.sdf", f"{self.package_path}urdf/{output_folder_name}.urdf")
